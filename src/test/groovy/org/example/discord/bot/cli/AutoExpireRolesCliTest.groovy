@@ -12,6 +12,9 @@ class AutoExpireRolesCliTest extends Specification {
 
     @Shared
     def origSystemErr = System.err
+    
+    @Shared
+    def lineSeperator = System.lineSeparator()
 
     def cleanup() {
         System.err = origSystemErr
@@ -42,16 +45,16 @@ class AutoExpireRolesCliTest extends Specification {
             }
         where:
             args                                | expecetedMessage
-            []                                  | 'error: Missing required option: \'--token=<token>\'\r\n' +
-                                                    'Usage: java -jar AutoExpireRoles<version>.jar -t <token>\r\n' +
-                                                    '  -d, --config-directory=<directory>\r\n' +
-                                                    '                        Path to the directory with the config.json\r\n' +
-                                                    '  -t, --token=<token>   Set the bot token to work with\r\n'
-            ['token']                           | 'error: Missing required option: \'--token=<token>\'\r\n' +
-                                                    'Usage: java -jar AutoExpireRoles<version>.jar -t <token>\r\n' +
-                                                    '  -d, --config-directory=<directory>\r\n' +
-                                                    '                        Path to the directory with the config.json\r\n' +
-                                                    '  -t, --token=<token>   Set the bot token to work with\r\n'
+            []                                  | "error: Missing required option: \'--token=<token>\'$lineSeperator" +
+                                                    "Usage: java -jar AutoExpireRoles<version>.jar -t <token>$lineSeperator" +
+                                                    "  -d, --config-directory=<directory>$lineSeperator" +
+                                                    "                        Path to the directory with the config.json$lineSeperator" +
+                                                    "  -t, --token=<token>   Set the bot token to work with$lineSeperator"
+            ['token']                           | "error: Missing required option: \'--token=<token>\'$lineSeperator" +
+                                                    "Usage: java -jar AutoExpireRoles<version>.jar -t <token>$lineSeperator" +
+                                                    "  -d, --config-directory=<directory>$lineSeperator" +
+                                                    "                        Path to the directory with the config.json$lineSeperator" +
+                                                    "  -t, --token=<token>   Set the bot token to work with$lineSeperator"
             ['-t', 'token']                     | ''
             ['-h']                              | ''
             ['--help']                          | ''
