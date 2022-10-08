@@ -24,5 +24,6 @@ hs_err_pid*
 
 # java build things
 /.idea/
+*.iml
 /target/*
 config.json
