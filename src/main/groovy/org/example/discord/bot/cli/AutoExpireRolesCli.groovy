@@ -181,10 +181,14 @@ final class AutoExpireRolesCli {
         }
         StringBuilder sb = new StringBuilder()
         sb.append('{')
-        expireStateMap.each { entry ->
-            sb.append("\"${entry.key}\" : \"${entry.value}\",${System.lineSeparator()}")
+        def entries = expireStateMap.entrySet()
+        def max = entries.size() - 2
+        int i = 0
+        for (; i <= max; i++) {
+            sb.append("\"${entries[i].key}\" : \"${entries[i].value}\",${System.lineSeparator()}")
         }
-        sb.delete(sb.size() - 3, sb.size())
+        sb.append("\"${entries[i].key}\" : \"${entries[i].value}\"")
+
         sb.append('}')
         return sb.toString()
     }
