@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import org.example.discord.bot.cli.AutoExpireRolesCli
 import org.slf4j.Logger
@@ -64,13 +65,25 @@ class AutoExpireRoles {
             System.exit(0)
         }
 
-        def (initDelay,period,timeUnit) = AutoExpireRolesCli.readConfig(cli.d?cli.d:null, DEFAULT_DURATIONS)
-        if (initDelay == null || period == null || timeUnit == null) {
+
+        def workingDirectory = cli.d ? cli.d : null
+        def (initDelay, period, timeUnit, token, channelCommandWhiteList)
+            = AutoExpireRolesCli.readConfig(workingDirectory, DEFAULT_DURATIONS)
+        if (initDelay == null || period == null || timeUnit == null || !token || !channelCommandWhiteList) {
+            if (!token) {
+                LOG.error('token not set in config.json')
+            }
+            if (!channelCommandWhiteList) {
+                LOG.error('channleCommandWhiteList not set in config.json')
+            }
             System.exit(-1)
         }
 
-        final JDA jda = JDABuilder.createDefault(cli.token)
-                .addEventListeners(new CommandListener())
+        AutoExpireRolesCli.readExpireState(workingDirectory, USER_EXPIRATIONS)
+
+        final JDA jda = JDABuilder.createDefault(token)
+                .addEventListeners(new CommandListener(channelCommandWhiteList))
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, // special bot rights "SERVER MEMBERS INTENT"
                         GatewayIntent.MESSAGE_CONTENT) // and "MESSAGE CONTENT INTENT"
                 .build()
@@ -78,8 +91,10 @@ class AutoExpireRoles {
         jda.awaitReady()
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOG.info('shutting down')
             jda.shutdown()
-            LOG.info('shutdown')
+            AutoExpireRolesCli.writeExpireState(workingDirectory, USER_EXPIRATIONS)
+            LOG.info('shutdown complete')
         }))
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
@@ -124,7 +139,7 @@ class AutoExpireRoles {
     private static void removeExpirationEntry(JDA jda, String guildUserKey, Instant savedExpiration) {
         def (roleById, memberById) = reverseGuildUserKey(jda, guildUserKey)
         LOG.info("removed role ${roleById?.name} cause the member ${memberById?.effectiveName} " +
-                "has lost the role was tue $savedExpiration)")
+                "has lost the role was tue $savedExpiration")
         removeFromExpireMap(guildUserKey)
     }
 
@@ -160,8 +175,8 @@ class AutoExpireRoles {
     private static String addDefaultExpiration(Guild g, Role r, Member member) {
         String guildUserKey = getGuildUserKey(g, r, member)
 
-        if (!USER_EXPIRATIONS.contains(guildUserKey)) {
-            LOG.debug("$g.name member $member.effectiveName got managed role $r.name")
+        if (!USER_EXPIRATIONS.containsKey(guildUserKey)) {
+            LOG.info("$g.name member $member.effectiveName got managed role $r.name")
             USER_EXPIRATIONS.putIfAbsent(guildUserKey,
                     getDefaultInstant(DEFAULT_DURATIONS.get(getRoleKey(r))))
         }
@@ -185,6 +200,9 @@ class AutoExpireRoles {
     }
 
     private static def reverseGuildUserKey(JDA jda, String key) {
+        if (key.split('::')?.size() != 3) {
+            return [null, null]
+        }
         def (guildId, memberId, roleId) = key.split('::')
 
         def guildById = jda.getGuildById(guildId)
@@ -195,12 +213,24 @@ class AutoExpireRoles {
     }
 
     private static class CommandListener extends ListenerAdapter {
+
+        private final List<String> channelCommandWhiteList
+
+        CommandListener(List<String> channelCommandWhiteList) {
+            def copy = new ArrayList()
+            copy.addAll(channelCommandWhiteList)
+            this.channelCommandWhiteList = copy
+        }
+
         @Override
         void onMessageReceived(MessageReceivedEvent event) {
-            String message = event.getMessage().getContentDisplay()
-            if (event.getMember() != null && message.trim().equalsIgnoreCase('!expires')) {
-                if (event.isFromType(ChannelType.TEXT)) {
-                    replyExpireStats(event.getChannel(), event.getGuild(), event.getMember())
+            def channel = event.getChannel()
+            if (channelCommandWhiteList.contains(channel.name)) {
+                String message = event.getMessage().getContentDisplay()
+                if (event.getMember() != null && message.trim().equalsIgnoreCase('!expires')) {
+                    if (event.isFromType(ChannelType.TEXT)) {
+                        replyExpireStats(event.getChannel(), event.getGuild(), event.getMember())
+                    }
                 }
             }
         }

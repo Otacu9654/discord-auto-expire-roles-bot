@@ -6,6 +6,7 @@ import spock.lang.Specification
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 class AutoExpireRolesCliTest extends Specification {
@@ -13,9 +14,6 @@ class AutoExpireRolesCliTest extends Specification {
     @Shared
     def origSystemErr = System.err
     
-    @Shared
-    def lineSeperator = System.lineSeparator()
-
     def cleanup() {
         System.err = origSystemErr
     }
@@ -38,23 +36,14 @@ class AutoExpireRolesCliTest extends Specification {
             def message = new String(sw.toByteArray())
             assert message == expecetedMessage
             if (!message && cli) {
-                assert cli.t == 'token'
                 if (cli.d) {
                     assert cli.'config-directory' == './target'
                 }
             }
         where:
             args                                | expecetedMessage
-            []                                  | "error: Missing required option: \'--token=<token>\'$lineSeperator" +
-                                                    "Usage: java -jar AutoExpireRoles<version>.jar -t <token>$lineSeperator" +
-                                                    "  -d, --config-directory=<directory>$lineSeperator" +
-                                                    "                        Path to the directory with the config.json$lineSeperator" +
-                                                    "  -t, --token=<token>   Set the bot token to work with$lineSeperator"
-            ['token']                           | "error: Missing required option: \'--token=<token>\'$lineSeperator" +
-                                                    "Usage: java -jar AutoExpireRoles<version>.jar -t <token>$lineSeperator" +
-                                                    "  -d, --config-directory=<directory>$lineSeperator" +
-                                                    "                        Path to the directory with the config.json$lineSeperator" +
-                                                    "  -t, --token=<token>   Set the bot token to work with$lineSeperator"
+            []                                  | ''
+            ['token']                           | ''
             ['-t', 'token']                     | ''
             ['-h']                              | ''
             ['--help']                          | ''
@@ -91,5 +80,35 @@ class AutoExpireRolesCliTest extends Specification {
             false        | false       |  './target'  | 0         | 5      | TimeUnit.MINUTES | [TestRole1:[1, "MINUTES"], TestRole2:[5, "MINUTES"], TestRole3:[2, "DAYS"], TestRole4:[23446, "SECONDS"]]
             false        | false       |  './xyz'     | null      | null   | null             | [:]
             false        | true        |  './target'  | null      | null   | null             | [:]
+    }
+
+    def "toJsonFormat"() {
+        when:
+            def result = AutoExpireRolesCli.toJsonFormat(input != null?new TreeMap<String, Object>(input):input as Map<String, Object>)
+        then:
+            assert result == expected
+        where:
+            input                                                                                 | expected
+            [xxxxx: "2022-10-09T07:55:31.804621500Z"]                                             | '{"xxxxx" : "2022-10-09T07:55:31.804621500Z"}'
+            [xxxxx: "2022-10-09T07:55:31.804621500Z", yyyyy: "2022-10-10T07:55:31.804621500Z"]    | '{"xxxxx" : "2022-10-09T07:55:31.804621500Z",' + System.lineSeparator() + '"yyyyy" : "2022-10-10T07:55:31.804621500Z"}'
+            [:]    | '{}'
+            null  | '{}'
+
+    }
+
+    def "readWroteExpireState"() {
+        when:
+            AutoExpireRolesCli.writeExpireState('./target', input)
+            def result = [:]
+            AutoExpireRolesCli.readExpireState('./target', result as Map<String, Object>)
+        then:
+            assert result == expected
+        where:
+            input                                                                                 | expected
+            [:]                                                                                   | [:]
+            null                                                                                  | [:]
+            [xxxxx: "2022-10-09T07:55:31.804621500Z"]                                             | [xxxxx: Instant.parse("2022-10-09T07:55:31.804621500Z")]
+            [xxxxx: "2022-10-09T07:55:31.804621500Z", yyyyy: "2022-10-10T07:55:31.804621500Z"]    | [xxxxx: Instant.parse("2022-10-09T07:55:31.804621500Z"), yyyyy: Instant.parse("2022-10-10T07:55:31.804621500Z")]
+
     }
 }
