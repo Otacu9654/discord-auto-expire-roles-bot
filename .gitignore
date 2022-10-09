@@ -27,3 +27,5 @@ hs_err_pid*
 *.iml
 /target/*
 config.json
+expires-state.json
+expires-state.json.bak

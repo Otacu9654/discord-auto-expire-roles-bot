@@ -18,7 +18,7 @@ final class AutoExpireRolesCli {
     private static Logger LOG = LoggerFactory.getLogger(AutoExpireRolesCli)
 
     private AutoExpireRolesCli() {
-        throw new AssertionError('helper')
+        throw new RuntimeException('helper')
     }
 
     static def parseArgs(String[] args) {
@@ -34,9 +34,9 @@ final class AutoExpireRolesCli {
     }
 
     private static final String CONFIG_EXAMPLE = '{\n' +
-            '    "token" : "", \n' +
-            '    "channelCommandWhiteList" : ["bot-fun"], \n' +
-            '    "taskLoop" : {\n' +
+            '  "token" : "", \n' +
+            '  "channelCommandWhiteList" : ["bot-fun"], \n' +
+            '  "taskLoop" : {\n' +
             '    "initDelay": 0,\n' +
             '    "period": 5,\n' +
             '    "timeUnit": "MINUTES"\n' +
@@ -57,7 +57,11 @@ final class AutoExpireRolesCli {
             '    "TestRole4": [\n' +
             '      23446,\n' +
             '      "SECONDS"\n' +
-            '    ]\n' +
+            '    ],\n' +
+            '    "TestRole5": [\n' +
+            '      3,\n' +
+            '      "HALF_DAYS"\n' +
+            '    ] \n' +
             '  }\n' +
             '}'
 
@@ -119,7 +123,7 @@ final class AutoExpireRolesCli {
         }
         def stateFile = new File("$directoryAbsolutePath/expires-state.json")
         if (!stateFile.exists()) {
-            LOG.error("expires-state $directoryAbsolutePath/expires-state.json file does not exist")
+            LOG.info("expires-state $directoryAbsolutePath/expires-state.json file does not exist")
             return false
         }
         if (!stateFile.canRead()) {

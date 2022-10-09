@@ -22,7 +22,7 @@ class AutoExpireRolesCliTest extends Specification {
         when:
             new AutoExpireRolesCli()
         then:
-            def error = thrown(AssertionError)
+            def error = thrown(RuntimeException)
             assert error.message == 'helper'
     }
 
@@ -76,8 +76,8 @@ class AutoExpireRolesCliTest extends Specification {
             assert map == mapResult
         where:
             deleteConfig | emptyConfig |  input       | initDelay | period | timeUnit         | mapResult
-            true         | false       |  './target'  | 0         | 5      | TimeUnit.MINUTES | [TestRole1:[1, "MINUTES"], TestRole2:[5, "MINUTES"], TestRole3:[2, "DAYS"], TestRole4:[23446, "SECONDS"]]
-            false        | false       |  './target'  | 0         | 5      | TimeUnit.MINUTES | [TestRole1:[1, "MINUTES"], TestRole2:[5, "MINUTES"], TestRole3:[2, "DAYS"], TestRole4:[23446, "SECONDS"]]
+            true         | false       |  './target'  | 0         | 5      | TimeUnit.MINUTES | [TestRole1:[1, "MINUTES"], TestRole2:[5, "MINUTES"], TestRole3:[2, "DAYS"], TestRole4:[23446, "SECONDS"], TestRole5:[3, "HALF_DAYS"]]
+            false        | false       |  './target'  | 0         | 5      | TimeUnit.MINUTES | [TestRole1:[1, "MINUTES"], TestRole2:[5, "MINUTES"], TestRole3:[2, "DAYS"], TestRole4:[23446, "SECONDS"], TestRole5:[3, "HALF_DAYS"]]
             false        | false       |  './xyz'     | null      | null   | null             | [:]
             false        | true        |  './target'  | null      | null   | null             | [:]
     }

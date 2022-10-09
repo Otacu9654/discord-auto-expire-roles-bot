@@ -192,7 +192,14 @@ class AutoExpireRoles {
     }
 
     private static Instant getDefaultInstant(List<Object> params) {
-        return Instant.now().plus((Integer) params[0], ChronoUnit."${params[1]}")
+        def result
+        try {
+            result = Instant.now().plus((Integer) params[0], ChronoUnit."${params[1]}")
+        } catch (Exception e) {
+            LOG.warn("$e.message: ${params[1]} not supported defaulting to HOURS")
+            result = Instant.now().plus((Integer) params[0], ChronoUnit.HOURS)
+        }
+        return result
     }
 
     private static String getGuildUserKey(Guild g, Role r, Member member) {
