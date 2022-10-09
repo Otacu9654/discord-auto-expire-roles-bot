@@ -13,16 +13,14 @@ https://discord.com/oauth2/authorize?client_id=...&scope=bot&permissions=2684375
 4. Change the runtime Paramters in the config.json File (is created at startup in the config-directory (default working directory) and the defaultDurations
 especially the role names you want to have managed
 
-5. Run this as java application with the bot token as parameter
+5. Run this as java application
 
 ```
-Usage: java -jar AutoExpireRoles<version>.jar -t <token>
+Usage: java -jar AutoExpireRoles<version>.jar
   -d, --config-directory=<directory>
                         Path to the directory with the config.json
-  -t, --token=<token>   Set the bot token to work with
 ```
 
-The bot reacts on the command !expires in a text channel
+The bot reacts on the command !expires in a text channel you whitelisted in the config.json file.
 
-This prototype has only RAM storage that means on restart the expries info is lost and
-starts with the default values per role again.
+The state of the user role expire dates is saved in the config-directory/expries-state.json with on backup file on shutdown.
