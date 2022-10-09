@@ -5,6 +5,7 @@ import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.time.Instant
@@ -79,9 +80,9 @@ final class AutoExpireRolesCli {
         def configFile = new File("$directoryAbsolutePath/config.json")
         if (!configFile.exists()) {
             if (directory.canWrite()) {
-                configFile.withWriter { bw ->
+                configFile.withWriter(StandardCharsets.UTF_8 as String, { bw ->
                     bw.println(CONFIG_EXAMPLE)
-                }
+                })
             } else {
                 LOG.error("can't create config.json $directoryAbsolutePath/config.json directory ist not writeable")
                 return [null, null, null]
@@ -91,7 +92,7 @@ final class AutoExpireRolesCli {
             LOG.error("can't read config.json $directoryAbsolutePath/config.json")
             return [null, null, null]
         }
-        configFile.withReader {br ->
+        configFile.withReader(StandardCharsets.UTF_8 as String, {br ->
             def lines = br.readLines()
             if (!lines) {
                 LOG.error("config file $directoryAbsolutePath/config.json is empty")
@@ -107,7 +108,7 @@ final class AutoExpireRolesCli {
             return [configJson.taskLoop.initDelay, configJson.taskLoop.period,
                     TimeUnit."$configJson.taskLoop.timeUnit", configJson.token,
                     configJson.channelCommandWhiteList]
-        }
+        })
     }
 
     static boolean readExpireState(String directoryPath, Map<String, Object> expireStateMap) {
@@ -130,7 +131,7 @@ final class AutoExpireRolesCli {
             LOG.error("can't read expires-state $directoryAbsolutePath/expires-state.json")
             return false
         }
-        stateFile.withReader {br ->
+        stateFile.withReader(StandardCharsets.UTF_8 as String, { br ->
             def lines = br.readLines()
             if (!lines) {
                 LOG.error("expires-state file $directoryAbsolutePath/expires-state.json is empty")
@@ -141,7 +142,7 @@ final class AutoExpireRolesCli {
                 expireStateMap.put(mapEntry.key, Instant.parse(mapEntry.value))
             }
             return true
-        }
+        })
     }
 
     static void writeExpireState(String directoryPath, Map<String, Object> expireStateMap) {
@@ -170,9 +171,9 @@ final class AutoExpireRolesCli {
             }
         }
         def string = toJsonFormat(expireStateMap)
-        stateFile.withWriter {bw ->
+        stateFile.withWriter(StandardCharsets.UTF_8 as String, {bw ->
             bw.append(string)
-        }
+        })
     }
 
     private static def toJsonFormat(Map<String, Object> expireStateMap) {
