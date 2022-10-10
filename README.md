@@ -11,7 +11,7 @@ want (permissions are "Send Message" and "Manage Roles")
 https://discord.com/oauth2/authorize?client_id=...&scope=bot&permissions=268437504
 
 4. Change the runtime Parameters in the config.json File (is created at startup in the config-directory (default working directory) and the defaultDurations
-especially the role names you want to have managed
+especially the role names you want to have managed)
 
 5. Run this as java application with at least java 11 (the first start creates a sample config.json and quits with an error because the bot token is not set by default)
 
