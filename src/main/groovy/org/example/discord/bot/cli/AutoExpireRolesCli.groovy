@@ -71,11 +71,11 @@ final class AutoExpireRolesCli {
         def directoryAbsolutePath = directory.absolutePath
         if (!directory.exists()) {
             LOG.error("config-directory $directoryAbsolutePath does not exists")
-            return [null, null, null]
+            return []
         }
         if (!directory.canRead()) {
             LOG.error("can't read in config-directory $directoryAbsolutePath")
-            return [null, null, null]
+            return []
         }
         def configFile = new File("$directoryAbsolutePath/config.json")
         if (!configFile.exists()) {
@@ -85,12 +85,12 @@ final class AutoExpireRolesCli {
                 })
             } else {
                 LOG.error("can't create config.json $directoryAbsolutePath/config.json directory ist not writeable")
-                return [null, null, null]
+                return []
             }
         }
         if (!configFile.canRead()) {
             LOG.error("can't read config.json $directoryAbsolutePath/config.json")
-            return [null, null, null]
+            return []
         }
         configFile.withReader(StandardCharsets.UTF_8 as String, {br ->
             def lines = br.readLines()
@@ -98,7 +98,7 @@ final class AutoExpireRolesCli {
                 LOG.error("config file $directoryAbsolutePath/config.json is empty")
                 LOG.error("you can use the following as example")
                 LOG.error(CONFIG_EXAMPLE)
-                return [null, null, null]
+                return []
             }
             def configJson = new JsonSlurper().parseText(lines.join('\r\n'))
             configJson.defaultDurations.each { mapEntry ->
